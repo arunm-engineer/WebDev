@@ -1,29 +1,163 @@
-import style from './Select.module.css';
+import { useEffect, useRef, useState } from 'react';
+import styles from './Select.module.css';
 
-type SelectOption = {
-    value: any,
-    label: string
+export type SelectOption = {
+    label: string,
+    value: string | number
 }
 
-type SelectProps = {
+type MultipleSelectProps = {
+    multiple: true,
+    value: SelectOption[],
+    onChange: (value: SelectOption[]) => void
+}
+
+type SingleSelectProps = {
+    multiple?: false,
     value?: SelectOption,
-    options: SelectOption[],
     onChange: (value: SelectOption | undefined) => void
 }
 
-export function Select({ value, onChange, options }: SelectProps) {
+type SelectProps = {
+    options: SelectOption[],
+} & (SingleSelectProps | MultipleSelectProps)
+
+export function Select({ multiple, value, onChange, options }: SelectProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    function clearOptions() {
+        if (multiple) {
+            onChange([]);
+        }
+        else {
+            onChange(undefined);
+        }
+    }
+
+    function selectOption(option: SelectOption) {
+        if (multiple) {
+            if (value.includes(option)) {
+                onChange(value.filter(v => v !== option));
+            }
+            else {
+                onChange([...value, option]);
+            }
+        }
+        else {
+            if (option !== value) onChange(option);
+        }
+    }
+
+    function isOptionSelected(option: SelectOption) {
+        if (multiple) {
+            return value.includes(option);
+        }
+        else {
+            return option === value;
+        }
+    }
+
+    function isOptionHighlighted(index: number) {
+        return highlightedIndex === index;
+    }
+
+    useEffect(() => {
+        if (isOpen) setHighlightedIndex(0);
+    }, [isOpen])
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (e.target != containerRef.current) return;
+            console.log(e.target != containerRef.current);
+
+            switch(e.code) {
+                case 'Enter':
+                case 'Space': {
+                    setIsOpen(prev => !prev);
+                    if (isOpen) selectOption(options[highlightedIndex]);
+                    break;
+                }
+                case 'ArrowUp':
+                case 'ArrowDown': {
+                    if (!isOpen) {
+                        setIsOpen(true);
+                        break;
+                    }
+
+                    const newValue = highlightedIndex + (e.code === 'ArrowDown' ? 1 : -1);
+                    if (newValue >= 0 && newValue < options.length) {
+                        setHighlightedIndex(newValue);
+                    }
+                    break;
+                }
+                case 'Escape': {
+                    setIsOpen(false);
+                    break;
+                }
+            }
+        };
+
+        containerRef.current?.addEventListener('keydown', handler);
+        return () => containerRef.current?.removeEventListener('keydown', handler);
+    }, [isOpen, highlightedIndex, options])
+
     return (
-        <div tabIndex={0} className={style.container}>
-            <span className={style.value}>Value</span>
-            <button className={style['clear-btn']}>&times;</button>
-            <div className={style.divider}></div>
-            <div className={style.caret}></div>
-            <ul className={style.options}>
+        <div
+        ref={containerRef}
+        onClick={() => setIsOpen(prev => !prev)}
+        onBlur={() => setIsOpen(false)}
+        tabIndex={0} className={styles.container}
+        >
+            <span className={styles.value}>
                 {
-                    options.map(option => {
+                (multiple) 
+                    ? (value.map(v => {
                         return (
-                            <li key={option.label} className={style.option}>
-                                {option.value}
+                            <button
+                            onClick={e => {
+                                e.stopPropagation();
+                                selectOption(v);
+                            }}
+                            key={v.label + Math.random()} className={styles['option-badge']}
+                            >
+                                {v.label} 
+                                <span className={styles['remove-btn']}>&times;</span>
+                            </button>
+                        )
+                    })) 
+                    : (value?.label)
+                }
+            </span>
+            <button 
+            onClick={e => {
+                e.stopPropagation();
+                clearOptions();
+            }}
+            className={styles['clear-btn']}>
+                &times;
+            </button>
+            <div className={styles.divider}></div>
+            <div className={styles.caret}></div>
+            <ul className={`${styles.options} ${isOpen ? styles.show : ''}`}>
+                {
+                    options.map((option, index) => {
+                        return (
+                            <li 
+                            onMouseEnter={() => setHighlightedIndex(index)}
+                            onClick={e => {
+                                e.stopPropagation();
+                                selectOption(option);
+                                setIsOpen(false);
+                            }}
+                            key={option.label + Math.random()} 
+                            className={`${styles.option}
+                            ${isOptionSelected(option) ? styles.selected : ''}
+                            ${isOptionHighlighted(index) ? styles.highlighted : ''}
+                            `}
+                            >
+                                {option.label}
                             </li>
                         )
                     })
