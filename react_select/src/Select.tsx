@@ -70,7 +70,6 @@ export function Select({ multiple, value, onChange, options }: SelectProps) {
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.target != containerRef.current) return;
-            console.log(e.target != containerRef.current);
 
             switch(e.code) {
                 case 'Enter':
