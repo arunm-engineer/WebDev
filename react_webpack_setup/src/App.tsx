@@ -5,7 +5,7 @@ import imageSVG from './react.svg';
 export const App = () => {
     return (
         <>
-            <h1>React Webpack Setup</h1>
+            <h1>React Webpack Setup - {process.env.name}</h1>
             <img src={imagePNG} alt="React logo PNG" width="300" height="300" />
             <img src={imageSVG} alt="React logo PNG" width="200" />
         </>
