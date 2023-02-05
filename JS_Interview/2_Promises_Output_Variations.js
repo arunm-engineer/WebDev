@@ -1,6 +1,6 @@
 const promise = new Promise((resolve, reject) => {
-    // resolve('Hello World');
-    reject('Hello Error');
+    resolve('Hello World');
+    // reject('Hello Error');
 })
 
 // ===================================================
@@ -68,6 +68,26 @@ const promise = new Promise((resolve, reject) => {
 // })
 // .finally(() => {
 //     console.log('Catch Finally');
+// })
+
+// ===================================================
+
+// promise
+// .then(val => {
+//     console.log('Returning error');
+//     throw new Error('Error');
+// })
+// .then(val => {
+//     console.log('Caught after error', val);
+// })
+// .then(val => {
+//     console.log(val);
+// })
+// .catch(err => {
+//     console.log('Caught error in catch', err);
+// })
+// .finally(() => {
+//     console.log('Just Finally');
 // })
 
 // ===================================================
